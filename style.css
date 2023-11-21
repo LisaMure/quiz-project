@@ -6,6 +6,7 @@ body {
 .quiz-body {
   width: 600px;
   margin: 0 auto;
+  margin-bottom: 50px;
   padding: 30px;
   background: linear-gradient(to right, #3a1051, #05486f);
 }
@@ -63,4 +64,19 @@ body {
 
 .time-out {
   background-color: red;
+}
+
+.restart-btn {
+  border: 1px solid #ac12cf;
+  border-radius: 20px;
+  background: #ac12cf;
+  color: white;
+  font-size: 25px;
+  width: 200px;
+  margin: 0 auto;
+}
+.restart-btn:hover {
+  border: 1px solid #ac12cf;
+  background: white;
+  color: #ac12cf;
 }

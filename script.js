@@ -1,6 +1,7 @@
 const quizQuestionEl = document.getElementById("quiz-question");
 const quizAnswerEl = document.getElementById("quiz-answer");
 const quizBody = document.getElementById("quiz-body");
+const quizContainer = document.getElementById("quiz-container");
 const notificationModal = document.getElementById("notification-modal");
 const progressBar = document.getElementById("progress-bar");
 let quizCompleted = false; // Flag to track quiz completion
@@ -11,7 +12,7 @@ let progressInterval;
 // Display Quiz Question
 function displayQuizQuestion(currentQuestionIndex) {
   const questionEL = document.getElementById("quiz-question-el");
-  question = quizQuestions[currentQuestionIndex].question;
+  const question = quizQuestions[currentQuestionIndex].question;
   questionEL.textContent = question;
 }
 
@@ -110,8 +111,26 @@ function displayNextQuestion() {
     quizBody.style.fontWeight = "bold";
     quizBody.style.padding = "120px";
     quizCompleted = true; // Update the quiz status
+
+    // const restartBtn = document.createElement("button");
+    // restartBtn.textContent = "Restart Quiz";
+    // restartBtn.classList.add("restart-btn", "mt-5");
+    // restartBtn.addEventListener("click", restartQuiz);
+    // quizBody.appendChild(restartBtn);
   }
 }
+
+// function restartQuiz() {
+//   const quizBody = document.getElementById("quiz-body");
+//   if (quizBody) {
+//     currentQuestionIndex = 0;
+//     quizCompleted = false;
+//     quizBody.innerHTML = ""; // Clearing the quizBody
+//     displayQuizQuestion(currentQuestionIndex);
+//     displayQuizAnswer(currentQuestionIndex);
+//     setTimer(15000, displayNextQuestion);
+//   }
+// }
 
 // Set up the timer and start the quiz
 function setTimer(duration, callback) {
