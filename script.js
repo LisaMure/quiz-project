@@ -5,32 +5,52 @@ const quizContainer = document.getElementById("quiz-container");
 const notificationModal = document.getElementById("notification-modal");
 const progressBar = document.getElementById("progress-bar");
 let quizCompleted = false; // Flag to track quiz completion
-
+let data = [];
 let currentQuestionIndex = 0;
 let progressInterval;
 
+function fetchQuizData() {
+  axios
+    .get("https://the-trivia-api.com/v2/questions?difficulty=easy")
+    .then((response) => {
+      data = response.data;
+      displayQuizQuestion(data, currentQuestionIndex);
+      displayQuizAnswer(data, currentQuestionIndex);
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+    });
+}
+
 // Display Quiz Question
-function displayQuizQuestion(currentQuestionIndex) {
+function displayQuizQuestion(data, currentQuestionIndex) {
   const questionEL = document.getElementById("quiz-question-el");
-  const question = quizQuestions[currentQuestionIndex].question;
+  const question = data[currentQuestionIndex].question.text;
   questionEL.textContent = question;
 }
 
 // Display Quiz Answers
-function displayQuizAnswer(currentQuestionIndex) {
+function displayQuizAnswer(data, currentQuestionIndex) {
   // Clear the current answers
   clearAnswers();
 
-  // Loop through and display the possible answers
-  const answers = quizQuestions[currentQuestionIndex].answers;
-  const correctAnswer = quizQuestions[currentQuestionIndex].correctAnswer;
+  // Get the current question data
+  const currentQuestion = data[currentQuestionIndex];
 
-  Object.keys(answers).forEach((key, index) => {
+  // Loop through and display the possible answers
+  const correctAnswer = currentQuestion.correctAnswer;
+  const incorrectAnswers = currentQuestion.incorrectAnswers;
+  const allAnswers = [correctAnswer, ...incorrectAnswers];
+
+  // Shuffle the answers in the array
+  const shuffledAnswers = shuffleArray(allAnswers);
+
+  shuffledAnswers.forEach((answer, index) => {
     const div = document.createElement("div");
     div.classList.add("col-sm-6", "mb-3", "mb-sm-0", "mt-4");
     div.innerHTML = `
     <div class="card quiz-answer">
-    <button id="quiz-answer-${index}">${answers[key]}</button> 
+    <button id="quiz-answer-${index}">${answer}</button> 
     </div>
         `;
 
@@ -43,13 +63,23 @@ function displayQuizAnswer(currentQuestionIndex) {
         `#quiz-answer-${index}`
       ).textContent;
 
-      handleResponses(selectedAnswer, correctAnswer);
+      handleResponses(selectedAnswer, correctAnswer, data);
     });
   });
 }
 
+// Shuffle the array with answers
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 // Handle the user's responses
-function handleResponses(selectedAnswer, correctAnswer) {
+function handleResponses(selectedAnswer, correctAnswer, data) {
+  console.log("Data in handleResponses function:", data);
   // Notification modal
   const answerModal = new bootstrap.Modal("#exampleModal");
 
@@ -57,18 +87,20 @@ function handleResponses(selectedAnswer, correctAnswer) {
     answerModal.show();
 
     setTimeout(() => {
+      console.log("Data in handleResponses function:", data);
       answerModal.hide();
+      displayNextQuestion(data);
     }, 3000);
   }
 
   // Handle submitted responses
   if (selectedAnswer === correctAnswer) {
     handleModal();
-    notificationModal.innerHTML = "Nailed it!💃💃";
+    notificationModal.innerHTML = `<i class="fa-solid fa-circle-check fa-xl" style="color: #419b45;"></i> Nailed it!`;
     setTimeout(displayNextQuestion, 3000);
   } else {
     handleModal();
-    notificationModal.innerHTML = `Sorry😞 The correct answer is ${correctAnswer}`;
+    notificationModal.innerHTML = `<i class="fa-solid fa-circle-xmark fa-xl" style="color: #c30909;"></i> Oops! The correct answer is ${correctAnswer}`;
     setTimeout(displayNextQuestion, 3000);
   }
 }
@@ -83,8 +115,8 @@ function clearAnswers() {
 }
 
 // Display the next question
-function displayNextQuestion() {
-  if (!quizCompleted && currentQuestionIndex < quizQuestions.length - 1) {
+function displayNextQuestion(data) {
+  if (!quizCompleted && currentQuestionIndex < data.length - 1) {
     // Reset the progress bar
     currentQuestionIndex++;
     clearInterval(progressInterval);
@@ -94,12 +126,9 @@ function displayNextQuestion() {
 
     // Reset the timer
     setTimer(15000, displayNextQuestion);
-    displayQuizQuestion(currentQuestionIndex);
-    displayQuizAnswer(currentQuestionIndex);
-  } else if (
-    currentQuestionIndex === quizQuestions.length - 1 &&
-    !quizCompleted
-  ) {
+    displayQuizQuestion(data, currentQuestionIndex);
+    displayQuizAnswer(data, currentQuestionIndex);
+  } else if (currentQuestionIndex === data.length - 1 && !quizCompleted) {
     // Clear the timer
     clearInterval(progressInterval);
 
@@ -112,28 +141,18 @@ function displayNextQuestion() {
     quizBody.style.padding = "120px";
     quizCompleted = true; // Update the quiz status
 
-    // const restartBtn = document.createElement("button");
-    // restartBtn.textContent = "Restart Quiz";
-    // restartBtn.classList.add("restart-btn", "mt-5");
-    // restartBtn.addEventListener("click", restartQuiz);
-    // quizBody.appendChild(restartBtn);
+    const restartBtn = document.createElement("button");
+    restartBtn.textContent = "Restart Quiz";
+    restartBtn.classList.add("restart-btn", "mt-5");
+    restartBtn.addEventListener("click", () => {
+      location.reload();
+    });
+    quizBody.appendChild(restartBtn);
   }
 }
 
-// function restartQuiz() {
-//   const quizBody = document.getElementById("quiz-body");
-//   if (quizBody) {
-//     currentQuestionIndex = 0;
-//     quizCompleted = false;
-//     quizBody.innerHTML = ""; // Clearing the quizBody
-//     displayQuizQuestion(currentQuestionIndex);
-//     displayQuizAnswer(currentQuestionIndex);
-//     setTimer(15000, displayNextQuestion);
-//   }
-// }
-
 // Set up the timer and start the quiz
-function setTimer(duration, callback) {
+function setTimer(duration) {
   let progress = 0;
   const intervalDuration = 50;
   const steps = duration / intervalDuration;
@@ -148,13 +167,6 @@ function setTimer(duration, callback) {
     progressBar.style.width = `${progress}%`;
     progressBar.setAttribute("aria-valuenow", progress);
 
-    // Change color to red when progress bar reaches 85
-    if (progress >= 85 && progress < 100) {
-      progressBar.style.backgroundColor = "red";
-    } else {
-      progressBar.style.backgroundColor = "";
-    }
-
     if (progress >= 100) {
       clearInterval(progressInterval);
       progressBar.style.transition = "width 0.3s ease-in-out";
@@ -163,15 +175,14 @@ function setTimer(duration, callback) {
 
       setTimeout(() => {
         progressBar.style.transition = "";
-
-        // Notification if timer runs out
         const timeUpModal = new bootstrap.Modal("#exampleModal");
         timeUpModal.show();
         notificationModal.innerHTML = "⏰Time's up!";
 
         setTimeout(() => {
+          console.log("Data in setTimer function:", data);
           timeUpModal.hide();
-          callback();
+          displayNextQuestion(data); // Move to the next question after timer ends
         }, 3000);
       }, 1000);
     }
@@ -186,8 +197,7 @@ function startQuiz() {
 
   startModal.show();
 
-  displayQuizQuestion(currentQuestionIndex);
-  displayQuizAnswer(currentQuestionIndex);
+  fetchQuizData();
 }
 
 // Handle the start button on the modal
