@@ -5,13 +5,17 @@ const quizContainer = document.getElementById("quiz-container");
 const notificationModal = document.getElementById("notification-modal");
 const progressBar = document.getElementById("progress-bar");
 let quizCompleted = false; // Flag to track quiz completion
+let progressInterval;
 let data = [];
 let currentQuestionIndex = 0;
-let progressInterval;
+let correctAnswers = 0;
 
 function fetchQuizData() {
   axios
-    .get("https://the-trivia-api.com/v2/questions?difficulty=easy")
+    .get("https://the-trivia-api.com/v2/questions?limit=3&difficulty=easy")
+    // https://the-trivia-api.com/api/questions?limit=3&difficulty=easy
+    // .get("https://the-trivia-api.com/v2/questions?difficulty=easy")
+
     .then((response) => {
       data = response.data;
       displayQuizQuestion(data, currentQuestionIndex);
@@ -79,7 +83,6 @@ function shuffleArray(array) {
 
 // Handle the user's responses
 function handleResponses(selectedAnswer, correctAnswer, data) {
-  console.log("Data in handleResponses function:", data);
   // Notification modal
   const answerModal = new bootstrap.Modal("#exampleModal");
 
@@ -87,7 +90,6 @@ function handleResponses(selectedAnswer, correctAnswer, data) {
     answerModal.show();
 
     setTimeout(() => {
-      console.log("Data in handleResponses function:", data);
       answerModal.hide();
       displayNextQuestion(data);
     }, 3000);
@@ -95,6 +97,8 @@ function handleResponses(selectedAnswer, correctAnswer, data) {
 
   // Handle submitted responses
   if (selectedAnswer === correctAnswer) {
+    correctAnswers++;
+    localStorage.setItem("Total Correct Answers", correctAnswers);
     handleModal();
     notificationModal.innerHTML = `<i class="fa-solid fa-circle-check fa-xl" style="color: #419b45;"></i> Nailed it!`;
     setTimeout(displayNextQuestion, 3000);
@@ -132,19 +136,34 @@ function displayNextQuestion(data) {
     // Clear the timer
     clearInterval(progressInterval);
 
-    // Clear the quizBody and display end of quiz message
-    quizBody.innerHTML =
-      "Congratulations!! You have reached the end of the quiz!";
+    const storedAnswers = localStorage.getItem("Total Correct Answers");
+
+    // Set the default message
+    let endOfQuizMessage = `Congratulations!! You have reached the end of the quiz!<br> <br><strong> Total Answers: </strong>`;
+
+    // Check if there are stored answers and they are not zero
+    if (storedAnswers !== null && parseInt(storedAnswers) !== 0) {
+      endOfQuizMessage += `${storedAnswers}/10`;
+    } else {
+      endOfQuizMessage += `0/10`;
+    }
+
+    // Display the end-of-quiz message in the quizBody
+    quizBody.innerHTML = endOfQuizMessage;
     quizBody.style.color = "white";
     quizBody.style.fontSize = "30px";
     quizBody.style.fontWeight = "bold";
-    quizBody.style.padding = "120px";
+    quizBody.style.padding = "60px";
+    // quizBody.innerHTML = '';
+
     quizCompleted = true; // Update the quiz status
+    // console.log(correctAnswers)
 
     const restartBtn = document.createElement("button");
     restartBtn.textContent = "Restart Quiz";
-    restartBtn.classList.add("restart-btn", "mt-5");
+    restartBtn.classList.add("restart-btn", "mt-5", "p-2");
     restartBtn.addEventListener("click", () => {
+      localStorage.clear();
       location.reload();
     });
     quizBody.appendChild(restartBtn);

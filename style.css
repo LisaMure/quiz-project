@@ -68,15 +68,18 @@ body {
 
 .restart-btn {
   border: 1px solid #ac12cf;
-  border-radius: 20px;
+  border-radius: 10px;
   background: #ac12cf;
   color: white;
-  font-size: 25px;
+  font-size: 23px;
+  font-weight: bold;
   width: 200px;
   margin: 0 auto;
+  transition: all 200ms ease-in-out;
 }
 .restart-btn:hover {
   border: 1px solid #ac12cf;
   background: white;
   color: #ac12cf;
+  font-size: 25px;
 }
