@@ -10,12 +10,10 @@ let data = [];
 let currentQuestionIndex = 0;
 let correctAnswers = 0;
 
+//Get data from API
 function fetchQuizData() {
   axios
-    .get("https://the-trivia-api.com/v2/questions?limit=3&difficulty=easy")
-    // https://the-trivia-api.com/api/questions?limit=3&difficulty=easy
-    // .get("https://the-trivia-api.com/v2/questions?difficulty=easy")
-
+    .get("https://the-trivia-api.com/v2/questions?difficulty=easy")
     .then((response) => {
       data = response.data;
       displayQuizQuestion(data, currentQuestionIndex);
@@ -60,13 +58,13 @@ function displayQuizAnswer(data, currentQuestionIndex) {
 
     document.getElementById("quiz-answer-row").appendChild(div);
 
+    // Event listener to handle clicked answers
     const button = document.querySelector(`#quiz-answer-${index}`);
-
     button.addEventListener("click", () => {
       selectedAnswer = document.querySelector(
         `#quiz-answer-${index}`
       ).textContent;
-
+      // Call function to handle responses
       handleResponses(selectedAnswer, correctAnswer, data);
     });
   });
@@ -97,6 +95,7 @@ function handleResponses(selectedAnswer, correctAnswer, data) {
 
   // Handle submitted responses
   if (selectedAnswer === correctAnswer) {
+    // Count the correct answers and set to local storage
     correctAnswers++;
     localStorage.setItem("Total Correct Answers", correctAnswers);
     handleModal();
@@ -120,9 +119,14 @@ function clearAnswers() {
 
 // Display the next question
 function displayNextQuestion(data) {
-  if (!quizCompleted && currentQuestionIndex < data.length - 1) {
-    // Reset the progress bar
+  if (
+    !quizCompleted &&
+    Array.isArray(data) &&
+    currentQuestionIndex < data.length - 1
+  ) {
     currentQuestionIndex++;
+
+    // Reset the progress bar
     clearInterval(progressInterval);
     progressBar.style.transition = "";
     progressBar.style.width = "0%";
@@ -132,42 +136,52 @@ function displayNextQuestion(data) {
     setTimer(15000, displayNextQuestion);
     displayQuizQuestion(data, currentQuestionIndex);
     displayQuizAnswer(data, currentQuestionIndex);
-  } else if (currentQuestionIndex === data.length - 1 && !quizCompleted) {
+  } else if (
+    data &&
+    currentQuestionIndex === data.length - 1 &&
+    !quizCompleted
+  ) {
     // Clear the timer
     clearInterval(progressInterval);
-
-    const storedAnswers = localStorage.getItem("Total Correct Answers");
-
-    // Set the default message
-    let endOfQuizMessage = `Congratulations!! You have reached the end of the quiz!<br> <br><strong> Total Answers: </strong>`;
-
-    // Check if there are stored answers and they are not zero
-    if (storedAnswers !== null && parseInt(storedAnswers) !== 0) {
-      endOfQuizMessage += `${storedAnswers}/10`;
-    } else {
-      endOfQuizMessage += `0/10`;
-    }
-
-    // Display the end-of-quiz message in the quizBody
-    quizBody.innerHTML = endOfQuizMessage;
-    quizBody.style.color = "white";
-    quizBody.style.fontSize = "30px";
-    quizBody.style.fontWeight = "bold";
-    quizBody.style.padding = "60px";
-    // quizBody.innerHTML = '';
-
-    quizCompleted = true; // Update the quiz status
-    // console.log(correctAnswers)
-
-    const restartBtn = document.createElement("button");
-    restartBtn.textContent = "Restart Quiz";
-    restartBtn.classList.add("restart-btn", "mt-5", "p-2");
-    restartBtn.addEventListener("click", () => {
-      localStorage.clear();
-      location.reload();
-    });
-    quizBody.appendChild(restartBtn);
+    // Call function to handle end of quiz
+    handleEndOfQuiz();
+    // Call function to restart the quiz
+    restartBtn();
   }
+}
+
+function restartBtn() {
+  const restartBtn = document.createElement("button");
+  restartBtn.textContent = "Restart Quiz";
+  restartBtn.classList.add("restart-btn", "mt-5", "p-2");
+  restartBtn.addEventListener("click", () => {
+    // Clear local storage
+    localStorage.clear();
+    location.reload();
+  });
+  quizBody.appendChild(restartBtn);
+}
+
+function handleEndOfQuiz() {
+  // Get stored answers
+  const storedAnswers = localStorage.getItem("Total Correct Answers");
+  // Set the default message
+  let endOfQuizMessage = `Congratulations!! You have reached the end of the quiz!<br> <br><strong> Total Answers: </strong>`;
+
+  // Check if there are stored answers
+  if (storedAnswers !== null && parseInt(storedAnswers) !== 0) {
+    endOfQuizMessage += `${storedAnswers}/10`;
+  } else {
+    endOfQuizMessage += `0/10`;
+  }
+
+  // Display the end-of-quiz message in the quizBody
+  quizBody.innerHTML = endOfQuizMessage;
+  quizBody.style.color = "white";
+  quizBody.style.fontSize = "30px";
+  quizBody.style.fontWeight = "bold";
+  quizBody.style.padding = "60px";
+  quizCompleted = true; // Update the quiz status
 }
 
 // Set up the timer and start the quiz
