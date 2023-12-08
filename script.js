@@ -175,13 +175,12 @@ function handleEndOfQuiz() {
     endOfQuizMessage += `0/10`;
   }
 
-  // Display the end-of-quiz message in the quizBody
+  // Display the end-of-quiz message
   quizBody.innerHTML = endOfQuizMessage;
-  quizBody.style.color = "white";
-  quizBody.style.fontSize = "30px";
-  quizBody.style.fontWeight = "bold";
-  quizBody.style.padding = "60px";
-  quizCompleted = true; // Update the quiz status
+  quizBody.classList.add("quiz-body-js");
+
+  // Update the quiz status
+  quizCompleted = true;
 }
 
 // Set up the timer and start the quiz
