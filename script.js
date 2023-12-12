@@ -85,6 +85,8 @@ function handleResponses(selectedAnswer, correctAnswer, data) {
   const answerModal = new bootstrap.Modal("#exampleModal");
 
   function handleModal() {
+    //Stop timer from running
+    clearInterval(progressInterval);
     answerModal.show();
 
     setTimeout(() => {
